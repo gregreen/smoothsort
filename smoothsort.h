@@ -51,6 +51,7 @@
 #define __SMOOTHSORT_H_
 
 #include <iostream>
+#include <assert.h>
 
 
 template<class T>
@@ -297,6 +298,96 @@ struct sorted_ptr_arr {
 	smoothsort_ptr<T>* ptr_arr;
 	size_t N;
 	
+	// Construct without data
+	sorted_ptr_arr() : N(0), ptr_arr(NULL) {}
+	
+	// Initialize from c-array
+	sorted_ptr_arr(T* data, size_t _N) : ptr_arr(NULL), N(_N) { assign(data, N); sort(); }
+	
+	// Initialize from stl container
+	template<class TContainer>
+	sorted_ptr_arr(TContainer &data) { assign<TContainer>(data); sort(); }
+	
+	~sorted_ptr_arr() {
+		if(ptr_arr != NULL) { delete[] ptr_arr; }
+		ptr_arr = NULL;
+	}
+	
+	void operator()(T* data, size_t N) { assign(data, N); sort(); }
+	
+	template<class TContainer>
+	void operator()(TContainer &data) { assign(data); sort(); }
+	
+	void assign(T* data, size_t _N) {
+		if(ptr_arr != NULL) { delete[] ptr_arr; }
+		N = _N;
+		ptr_arr = new smoothsort_ptr<T>[N];
+		for(size_t i=0; i<N; i++) { ptr_arr[i] = &data[i]; }
+		sort();
+	}
+	
+	template<class TContainer>
+	void assign(TContainer &data) {
+		if(ptr_arr != NULL) { delete[] ptr_arr; }
+		N = data.size();
+		ptr_arr = new smoothsort_ptr<T>[N];
+		typename TContainer::iterator it_end = data.end();
+		unsigned int i=0;
+		for(typename TContainer::iterator it = data.begin(); it != it_end; ++it) {
+			if(i == N) { break; }
+			ptr_arr[i] = &(*it);
+			i++;
+		}
+		sort();
+	}
+	
+	void sort() {
+		assert(ptr_arr != NULL);	// Something's gone wrong if the program tries to sort without initializing the data
+		TLeonardoHeap< smoothsort_ptr<T> > lh(ptr_arr, N);
+		for(size_t i=1; i<N-1; i++) { lh.dequeue_max(N-i); }
+	}
+	
+	T& operator[](const size_t index) { return *(ptr_arr[index]); }
+	
+	struct iterator {
+		smoothsort_ptr<T>* curr_ptr;
+		
+		iterator() : curr_ptr(NULL) {}
+		iterator(smoothsort_ptr<T>* _curr_ptr) : curr_ptr(_curr_ptr) {}
+		
+		iterator& operator++() { curr_ptr++; return *this; }
+		iterator& operator--() { curr_ptr--; return *this; }
+		T& operator*() { return **curr_ptr; }
+		bool operator==(const iterator& rhs) { return rhs.curr_ptr == curr_ptr; }
+		bool operator!=(const iterator& rhs) { return rhs.curr_ptr != curr_ptr; }
+	};
+	
+	iterator begin() { return iterator(&ptr_arr[0]); }
+	iterator end() { return iterator(&ptr_arr[N]); }
+};
+
+/*
+// A container that automatically sorts the data given to it, and provides a simple stl
+// array-like interface for accessing the sorted components. The original array is not
+// altered. Rather, an array of pointers is created and sorted. The sorted array can,
+// however, be accessed exactly as if it were the original array, in either C-like
+// fashion, or through iterators:
+//
+// 	T data[N] = {...};
+// 	sorted_ptr_arr<T> sorted_data(data, N);
+// 	T x = sorted_data[5];
+// 	for(sorter_ptr_arr<T>::iterator i=sorted_data.begin(); i != sorted_data.end(); ++i) {
+// 		x = *i;
+// 	}
+//
+// As only pointers are swapped, this container is more useful for sorting arrays of large
+// classes than the vanilla <smoothsort> function, where physical swapping of elements would
+// be slow.
+template<class T>
+struct sorted_ptr_arr {
+	smoothsort_ptr<T>* ptr_arr;
+	size_t N;
+	
 	// Initialize from c-array
 	sorted_ptr_arr(T* data, size_t _N) : N(_N) {
 		ptr_arr = new smoothsort_ptr<T>[N];
@@ -344,6 +435,7 @@ struct sorted_ptr_arr {
 	iterator begin() { return iterator(&ptr_arr[0]); }
 	iterator end() { return iterator(&ptr_arr[N]); }
 };
+*/
 
 // Sort an array, swapping elements in place
 template<class T>
