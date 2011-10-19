@@ -297,11 +297,28 @@ struct sorted_ptr_arr {
 	smoothsort_ptr<T>* ptr_arr;
 	size_t N;
 	
+	// Initialize from c-array
 	sorted_ptr_arr(T* data, size_t _N) : N(_N) {
 		ptr_arr = new smoothsort_ptr<T>[N];
 		for(size_t i=0; i<N; i++) { ptr_arr[i] = &data[i]; }
 		sort();
 	}
+	
+	// Initialize from stl container
+	template<class TContainer>
+	sorted_ptr_arr(TContainer &data) {
+		N = data.size();
+		ptr_arr = new smoothsort_ptr<T>[N];
+		typename TContainer::iterator it_end = data.end();
+		unsigned int i=0;
+		for(typename TContainer::iterator it = data.begin(); it != it_end; ++it) {
+			if(i == N) { break; }
+			ptr_arr[i] = &(*it);
+			i++;
+		}
+		sort();
+	}
+	
 	~sorted_ptr_arr() { delete[] ptr_arr; ptr_arr = NULL; }
 	
 	void sort() {

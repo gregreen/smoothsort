@@ -4,9 +4,28 @@
 #include <string>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>
 
 #include "smoothsort.h"
 
+void test_stl_sorting() {
+	srand(time(NULL));
+	std::vector<double> to_sort;
+	to_sort.reserve(10);
+	for(unsigned int i=0; i<10; i++) {
+		to_sort.push_back((int)(100*(double)rand()/(double)RAND_MAX));
+	}
+	
+	sorted_ptr_arr<double> sorted_data(to_sort);
+	int last = sorted_data[0];
+	bool not_sorted = false;
+	for(sorted_ptr_arr<double>::iterator it=sorted_data.begin(); it != sorted_data.end(); ++it) {
+		if(last > *it) { not_sorted = true; }
+		std::cout << *it << "\t";
+	}
+	std::cout << std::endl;
+	if(not_sorted) { std::cout << "# NOT SORTED" << std::endl; }
+}
 
 void test_smoothsort(unsigned int N_lists, unsigned int list_max) {
 	srand(time(NULL));
@@ -30,7 +49,7 @@ void test_smoothsort(unsigned int N_lists, unsigned int list_max) {
 			//std::cout << *it << "\t";
 		}
 		//std::cout << std::endl;
-		if(not_sorted) { std::cout << "*NOT SORTED" << std::endl; }
+		if(not_sorted) { std::cout << "# NOT SORTED" << std::endl; }
 		//std::cout << std::endl;
 		
 		
@@ -59,6 +78,7 @@ void test_resorting(unsigned int N_trials, unsigned int list_size) {
 
 void print_usage(char *argv_0) {
 	std::cout << "Usage: " << argv_0 << " n_1 n_2 ... n_N\tSort {n_i}." << std::endl;
+	std::cout << "Usage: " << argv_0 << " --stl_test\tTest stl-container sorting." << std::endl;
 	std::cout << "Usage: " << argv_0 << " --test N max_size\tSort N lists of size less than max_size." << std::endl;
 	std::cout << "Usage: " << argv_0 << " --resort N size\tSort nearly-ordered list of given size N times." << std::endl;
 }
@@ -78,6 +98,12 @@ int main(int argc, char **argv) {
 				unsigned int N_lists = (unsigned int)atoi(argv[2]);
 				unsigned int list_max = (unsigned int)atoi(argv[3]);
 				test_resorting(N_lists, list_max);
+			} else {
+				print_usage(argv[0]);
+			}
+		} else if(std::string(argv[1]) == "--stl_test") {
+			if(argc == 2) {
+				test_stl_sorting();
 			} else {
 				print_usage(argv[0]);
 			}
